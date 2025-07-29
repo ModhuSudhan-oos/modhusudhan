@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - SaaS Tools Directory</title>
+    <meta name="description" content="Admin login page for the SaaS Tools Directory.">
+    <meta name="keywords" content="admin login, SaaS directory admin, Firebase authentication">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Admin Login</h1>
+        <div id="login-message" class="mb-4 p-3 rounded-md hidden"></div>
+        <form id="login-form">
+            <div class="mb-4">
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="email" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" id="password" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Login</button>
+        </form>
+    </div>
+
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="auth.js"></script>
+    <script type="module">
+        import { loginUser, auth } from './auth.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+        import { db } from './firebase-config.js';
+
+        const loginForm = document.getElementById('login-form');
+        const loginMessage = document.getElementById('login-message');
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Check if the user is an admin
+                const userDocRef = doc(db, "adminUsers", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                if (userDocSnap.exists() && (userDocSnap.data().isSuperAdmin || userDocSnap.data().canEditTools)) {
+                    window.location.href = '/admin.html';
+                } else {
+                    showMessage('You are logged in, but not authorized to access the admin panel.', 'error');
+                    // Optionally log out non-admin users immediately
+                    // await logoutUser();
+                }
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const userCredential = await loginUser(email, password);
+                const user = userCredential.user;
+
+                // Check user role from Firestore after successful login
+                const userDocRef = doc(db, "adminUsers", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+
+                if (userDocSnap.exists() && (userDocSnap.data().isSuperAdmin || userDocSnap.data().canEditTools)) {
+                    showMessage('Login successful! Redirecting to admin panel...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/admin.html';
+                    }, 1000);
+                } else {
+                    showMessage('Access Denied: You are not authorized to access the admin panel.', 'error');
+                    // If not an admin, log them out to prevent unauthorized access
+                    await auth.signOut();
+                }
+
+            } catch (error) {
+                console.error("Login failed:", error.message);
+                let errorMessage = "Login failed. Please check your credentials.";
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    errorMessage = 'Invalid email or password.';
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMessage = 'Too many login attempts. Please try again later.';
+                }
+                showMessage(errorMessage, 'error');
+            }
+        });
+
+        function showMessage(message, type) {
+            loginMessage.textContent = message;
+            loginMessage.className = `mb-4 p-3 rounded-md ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+            loginMessage.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
