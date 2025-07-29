@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Your Tool - SaaS Tools Directory</title>
+    <meta name="description" content="Submit your SaaS tool to be listed in our comprehensive directory.">
+    <meta name="keywords" content="submit SaaS tool, list software, add tool, new SaaS, directory submission">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <header class="bg-indigo-600 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold">SaaS Directory</a>
+            <nav class="hidden md:block">
+                <ul class="flex space-x-6">
+                    <li><a href="index.html" class="hover:text-indigo-200">Home</a></li>
+                    <li><a href="compare.html" class="hover:text-indigo-200">Compare Tools</a></li>
+                    <li><a href="blog.html" class="hover:text-indigo-200">Blog</a></li>
+                    <li><a href="faq.html" class="hover:text-indigo-200">FAQ</a></li>
+                    <li><a href="submit-tool.html" class="hover:text-indigo-200">Submit Tool</a></li>
+                    <li><a href="team.html" class="hover:text-indigo-200">Team</a></li>
+                    <li><a href="about.html" class="hover:text-indigo-200">About</a></li>
+                    <li><a href="login.html" class="bg-white text-indigo-600 px-4 py-2 rounded-md hover:bg-indigo-100 transition">Admin Login</a></li>
+                </ul>
+            </nav>
+            <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+        <nav id="mobile-menu" class="md:hidden bg-indigo-700 mt-2 p-4 rounded-md hidden">
+            <ul class="flex flex-col space-y-3">
+                <li><a href="index.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">Home</a></li>
+                <li><a href="compare.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">Compare Tools</a></li>
+                <li><a href="blog.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">Blog</a></li>
+                <li><a href="faq.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">FAQ</a></li>
+                <li><a href="submit-tool.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">Submit Tool</a></li>
+                <li><a href="team.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">Team</a></li>
+                <li><a href="about.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">About</a></li>
+                <li><a href="login.html" class="block py-2 px-4 bg-white text-indigo-600 rounded hover:bg-indigo-100 transition mt-2">Admin Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container mx-auto py-12 px-4">
+        <h1 class="text-4xl font-bold text-gray-900 mb-8 text-center">Submit Your SaaS Tool</h1>
+
+        <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+            <p class="mb-6 text-gray-700 text-center">Fill out the form below to suggest a new SaaS tool for our directory. Our team will review your submission.</p>
+            <div id="message-container" class="mb-4"></div>
+
+            <form id="submit-tool-form">
+                <div class="mb-4">
+                    <label for="tool-name" class="block text-sm font-medium text-gray-700">Tool Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="tool-name" name="tool-name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="mb-4">
+                    <label for="tool-url" class="block text-sm font-medium text-gray-700">Official Website URL <span class="text-red-500">*</span></label>
+                    <input type="url" id="tool-url" name="tool-url" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="mb-4">
+                    <label for="tool-description" class="block text-sm font-medium text-gray-700">Brief Description <span class="text-red-500">*</span></label>
+                    <textarea id="tool-description" name="tool-description" rows="4" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                </div>
+                 <div class="mb-4">
+                    <label for="tool-logo-url" class="block text-sm font-medium text-gray-700">Tool Logo URL (Optional - direct image link)</label>
+                    <input type="url" id="tool-logo-url" name="tool-logo-url" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="mb-4">
+                    <label for="tool-category" class="block text-sm font-medium text-gray-700">Category (e.g., Marketing, CRM, Project Management) <span class="text-red-500">*</span></label>
+                    <input type="text" id="tool-category" name="tool-category" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="mb-6">
+                    <label for="tool-tags" class="block text-sm font-medium text-gray-700">Tags (comma-separated, e.g., AI, Analytics, Automation)</label>
+                    <input type="text" id="tool-tags" name="tool-tags" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 text-white px-6 py-3 rounded-md text-lg font-semibold hover:bg-indigo-700 transition transform hover:scale-105">Submit Tool for Review</button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex flex-wrap justify-center space-x-6 mb-4 text-sm">
+                <a href="about.html" class="hover:text-gray-300">About Us</a>
+                <a href="privacy.html" class="hover:text-gray-300">Privacy Policy</a>
+                <a href="terms.html" class="hover:text-gray-300">Terms of Service</a>
+                <a href="faq.html" class="hover:text-gray-300">FAQ</a>
+                <a href="blog.html" class="hover:text-gray-300">Blog</a>
+                <a href="team.html" class="hover:text-gray-300">Our Team</a>
+            </div>
+            <p>&copy; 2025 SaaS Tools Directory. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="firestore.js"></script>
+    <script type="module" src="auth.js"></script>
+    <script type="module" src="seo-meta.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
