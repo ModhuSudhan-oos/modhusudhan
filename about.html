@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - SaaS Tools Directory</title>
+    <meta name="description" content="Learn more about the SaaS Tools Directory, our mission, and what we offer.">
+    <meta name="keywords" content="about us, mission, values, SaaS directory, company info">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <header class="bg-indigo-600 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold">SaaS Directory</a>
+            <nav class="hidden md:block">
+                <ul class="flex space-x-6">
+                    <li><a href="index.html" class="hover:text-indigo-200">Home</a></li>
+                    <li><a href="compare.html" class="hover:text-indigo-200">Compare Tools</a></li>
+                    <li><a href="blog.html" class="hover:text-indigo-200">Blog</a></li>
+                    <li><a href="faq.html" class="hover:text-indigo-200">FAQ</a></li>
+                    <li><a href="submit-tool.html" class="hover:text-indigo-200">Submit Tool</a></li>
+                    <li><a href="team.html" class="hover:text-indigo-200">Team</a></li>
+                    <li><a href="about.html" class="hover:text-indigo-200">About</a></li>
+                    <li><a href="login.html" class="bg-white text-indigo-600 px-4 py-2 rounded-md hover:bg-indigo-100 transition">Admin Login</a></li>
+                </ul>
+            </nav>
+            <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+        <nav id="mobile-menu" class="md:hidden bg-indigo-700 mt-2 p-4 rounded-md hidden">
+            <ul class="flex flex-col space-y-3">
+                <li><a href="index.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">Home</a></li>
+                <li><a href="compare.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">Compare Tools</a></li>
+                <li><a href="blog.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">Blog</a></li>
+                <li><a href="faq.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">FAQ</a></li>
+                <li><a href="submit-tool.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">Submit Tool</a></li>
+                <li><a href="team.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">Team</a></li>
+                <li><a href="about.html" class="block py-2 px-4 hover:bg-indigo-600 rounded">About</a></li>
+                <li><a href="login.html" class="block py-2 px-4 bg-white text-indigo-600 rounded hover:bg-indigo-100 transition mt-2">Admin Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container mx-auto py-12 px-4">
+        <h1 class="text-4xl font-bold text-gray-900 mb-8 text-center">About Us</h1>
+
+        <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg prose prose-indigo text-gray-700">
+            <p>Welcome to the SaaS Tools Directory, your ultimate resource for discovering, comparing, and selecting the best Software-as-a-Service solutions for your business.</p>
+
+            <h2 class="text-2xl font-semibold mt-8 mb-4">Our Mission</h2>
+            <p>Our mission is to simplify the complex landscape of SaaS tools. We aim to empower businesses of all sizes to make informed decisions by providing a comprehensive, reliable, and user-friendly directory of software solutions.</p>
+
+            <h2 class="text-2xl font-semibold mt-8 mb-4">What We Offer</h2>
+            <p>We curate a wide range of SaaS tools across various categories, providing detailed descriptions, key features, user reviews, and direct links to official websites. Our goal is to save you time and effort in your software search, helping you find the perfect tools to boost productivity, streamline operations, and drive growth.</p>
+
+            <h2 class="text-2xl font-semibold mt-8 mb-4">Our Values</h2>
+            <ul>
+                <li><strong>Transparency:</strong> We strive to provide unbiased and accurate information.</li>
+                <li><strong>Simplicity:</strong> We believe finding the right tools should be easy and straightforward.</li>
+                <li><strong>Community:</strong> We value user feedback and aim to build a platform that serves the needs of the SaaS community.</li>
+            </ul>
+
+            <p class="mt-8">Thank you for visiting SaaS Tools Directory. We are continuously working to improve our platform and expand our offerings to serve you better.</p>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex flex-wrap justify-center space-x-6 mb-4 text-sm">
+                <a href="about.html" class="hover:text-gray-300">About Us</a>
+                <a href="privacy.html" class="hover:text-gray-300">Privacy Policy</a>
+                <a href="terms.html" class="hover:text-gray-300">Terms of Service</a>
+                <a href="faq.html" class="hover:text-gray-300">FAQ</a>
+                <a href="blog.html" class="hover:text-gray-300">Blog</a>
+                <a href="team.html" class="hover:text-gray-300">Our Team</a>
+            </div>
+            <p>&copy; 2025 SaaS Tools Directory. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="firestore.js"></script>
+    <script type="module" src="auth.js"></script>
+    <script type="module" src="seo-meta.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
