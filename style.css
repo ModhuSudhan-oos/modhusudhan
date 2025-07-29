@@ -1,0 +1,8 @@
+/* style.css */
+@import url("https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css");
+
+/* Add any custom CSS here if Tailwind utility classes aren't enough */
+/* Example: Custom scrollbar styles, specific component overrides */
+.container-full {
+    max-width: 100%;
+}
