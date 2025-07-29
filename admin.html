@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - SaaS Tools Directory</title>
+    <meta name="description" content="Admin panel to manage SaaS tools, categories, FAQs, blog posts, and more.">
+    <meta name="keywords" content="admin dashboard, SaaS admin, content management, Firebase admin">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+    <div class="min-h-screen flex flex-col md:flex-row">
+        <aside class="bg-indigo-800 text-white w-full md:w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out" id="admin-mobile-menu">
+            <div class="flex items-center justify-between px-4">
+                <a href="admin.html" class="text-white text-2xl font-semibold">Admin Panel</a>
+                <button id="admin-mobile-menu-close-button" class="md:hidden text-white focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <nav>
+                <ul id="admin-menu">
+                    <li><a href="admin.html" class="block py-2 px-4 rounded hover:bg-indigo-700">Dashboard</a></li>
+                    <li><a href="admin.html?view=tools" class="block py-2 px-4 rounded hover:bg-indigo-700">Tools</a></li>
+                    <li><a href="admin.html?view=categories" class="block py-2 px-4 rounded hover:bg-indigo-700">Categories</a></li>
+                    <li><a href="admin.html?view=faqs" class="block py-2 px-4 rounded hover:bg-indigo-700">FAQs</a></li>
+                    <li><a href="admin.html?view=testimonials" class="block py-2 px-4 rounded hover:bg-indigo-700">Testimonials</a></li>
+                    <li><a href="admin.html?view=blog" class="block py-2 px-4 rounded hover:bg-indigo-700">Blog CMS</a></li>
+                    <li><a href="admin.html?view=team" class="block py-2 px-4 rounded hover:bg-indigo-700">Team</a></li>
+                    <li><a href="admin.html?view=seo" class="block py-2 px-4 rounded hover:bg-indigo-700">SEO Meta</a></li>
+                    <li><a href="admin.html?view=analytics" class="block py-2 px-4 rounded hover:bg-indigo-700">Analytics</a></li>
+                </ul>
+            </nav>
+            <div class="absolute bottom-0 w-full p-4">
+                 <button id="logout-button" class="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">Logout</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-6 md:p-10">
+            <div class="flex justify-between items-center mb-6 md:hidden">
+                <button id="admin-mobile-menu-button" class="text-indigo-800 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <span class="text-xl font-semibold text-gray-800">Admin Panel</span>
+                <button id="logout-button-mobile" class="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition">Logout</button>
+            </div>
+
+            <div id="admin-message-container" class="mb-4"></div>
+
+            <div id="admin-main-content">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md animate-pulse">
+                        <div class="h-6 bg-gray-200 rounded w-2/3 mb-2"></div>
+                        <div class="h-10 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md animate-pulse">
+                        <div class="h-6 bg-gray-200 rounded w-2/3 mb-2"></div>
+                        <div class="h-10 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md animate-pulse">
+                        <div class="h-6 bg-gray-200 rounded w-2/3 mb-2"></div>
+                        <div class="h-10 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="firestore.js"></script>
+    <script type="module" src="auth.js"></script>
+    <script type="module" src="admin-script.js"></script>
+    <script type="module">
+        // Attach mobile menu close button listener
+        document.addEventListener('DOMContentLoaded', () => {
+            const adminMobileMenu = document.getElementById('admin-mobile-menu');
+            const adminMobileMenuCloseButton = document.getElementById('admin-mobile-menu-close-button');
+            if (adminMobileMenuCloseButton) {
+                adminMobileMenuCloseButton.addEventListener('click', () => {
+                    adminMobileMenu.classList.add('-translate-x-full');
+                });
+            }
+            const logoutButtonMobile = document.getElementById('logout-button-mobile');
+            if (logoutButtonMobile) {
+                logoutButtonMobile.addEventListener('click', () => {
+                     import('./auth.js').then(({ logoutUser }) => {
+                        logoutUser();
+                     });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
