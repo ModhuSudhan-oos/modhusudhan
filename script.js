@@ -1,6 +1,29 @@
 // script.js
-import { getTools, getCategories, getFeaturedTools, getBlogPosts, getBlogPost, getFaqs, getTeamMembers, recordAffiliateClick } from './firestore.js';
+import { getTools, getCategories, getFeaturedTools, getBlogPosts, getBlogPost, getFaqs, getTeamMembers, recordAffiliateClick, getTool } from './firestore.js'; // Added getTool import
 import { setPageMetaData } from './seo-meta.js';
+
+// Global utility for general success/error messages - Moved to global scope as it was already defined globally by window.showMessage
+function showMessage(message, type = 'success') {
+    const messageContainer = document.getElementById('message-container');
+    if (messageContainer) {
+        messageContainer.innerHTML = `<div class="p-3 mb-4 rounded-md ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${message}</div>`;
+        setTimeout(() => messageContainer.innerHTML = '', 5000);
+    }
+}
+window.showMessage = showMessage; // Make it globally accessible for HTML inline calls if needed
+
+// Global function for FAQ toggling - Moved to global scope
+window.toggleFaq = (id) => {
+    const content = document.getElementById(id);
+    // Extract the index from the id string, e.g., 'faq-0' -> '0'
+    const index = id.split('-')[1];
+    const icon = document.getElementById(`faq-icon-${index}`);
+
+    if (content && icon) {
+        content.classList.toggle('hidden');
+        icon.classList.toggle('rotate-45');
+    }
+};
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Universal UI Logic (e.g., mobile menu toggle)
@@ -20,13 +43,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         await setPageMetaData('home');
         renderHomePage();
     } else if (path.includes('/tool.html')) {
-        await setPageMetaData('tool-detail'); // This would need to be dynamic per tool
+        // SEO metadata for tool detail page will be set inside renderToolDetailPage dynamically
         renderToolDetailPage();
     } else if (path === '/blog.html') {
         await setPageMetaData('blog');
         renderBlogPage();
     } else if (path.includes('/post.html')) {
-        await setPageMetaData('blog-post'); // This would need to be dynamic per post
+        // SEO metadata for blog post page will be set inside renderBlogPostPage dynamically
         renderBlogPostPage();
     } else if (path === '/faq.html') {
         await setPageMetaData('faq');
@@ -58,16 +81,18 @@ async function renderHomePage() {
                     <div class="mt-2">
                         ${(tool.tags || []).map(tag => `<span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded">${tag}</span>`).join('')}
                     </div>
-                    <a href="tool.html?id=${tool.id}" class="mt-3 inline-block text-indigo-600 hover:text-indigo-800 font-medium">Learn More &rarr;</a>
+                    <a href="tool.html?id=${tool.id}" class="mt-3 inline-block text-indigo-600 hover:text-indigo-800 font-medium" data-tool-id="${tool.id}">Learn More &rarr;</a>
                 </div>
             </div>
         `).join('');
 
-        // Attach click listeners for affiliate links
+        // Attach click listeners for affiliate links after rendering
         toolsContainer.querySelectorAll('a[data-tool-id]').forEach(link => {
-            link.addEventListener('click', () => {
+            link.addEventListener('click', (event) => {
                 const toolId = link.dataset.toolId;
-                recordAffiliateClick(toolId);
+                if (toolId) { // Ensure toolId exists before recording
+                    recordAffiliateClick(toolId);
+                }
             });
         });
     }
@@ -96,9 +121,11 @@ async function renderHomePage() {
         `).join('');
 
         featuredToolsContainer.querySelectorAll('a[data-tool-id]').forEach(link => {
-            link.addEventListener('click', () => {
+            link.addEventListener('click', (event) => {
                 const toolId = link.dataset.toolId;
-                recordAffiliateClick(toolId);
+                if (toolId) { // Ensure toolId exists before recording
+                    recordAffiliateClick(toolId);
+                }
             });
         });
     }
@@ -110,7 +137,7 @@ async function renderToolDetailPage() {
     const toolDetailContainer = document.getElementById('tool-detail-container');
 
     if (!toolId || !toolDetailContainer) {
-        toolDetailContainer.innerHTML = '<p class="text-center text-red-500">Tool not found.</p>';
+        toolDetailContainer.innerHTML = '<p class="text-center text-red-500">Tool ID missing or container not found.</p>';
         return;
     }
 
@@ -118,10 +145,10 @@ async function renderToolDetailPage() {
 
     if (tool) {
         // Update SEO metadata for the specific tool page
-        await setPageMetaData(tool.name, {
+        await setPageMetaData('tool-detail', { // Use a generic page name for fetching, then override
             title: `${tool.name} - SaaS Tool Directory`,
             description: tool.description,
-            keywords: `${tool.name}, ${tool.tags.join(', ')}, ${tool.category}, SaaS`
+            keywords: `${tool.name}, ${(tool.tags || []).join(', ')}, ${tool.category}, SaaS`
         });
 
         toolDetailContainer.innerHTML = `
@@ -151,6 +178,7 @@ async function renderToolDetailPage() {
                     </div>
             </div>
         `;
+        // Attach event listener after rendering content
         toolDetailContainer.querySelector('a[data-tool-id]').addEventListener('click', () => {
             recordAffiliateClick(toolId);
         });
@@ -163,17 +191,20 @@ async function renderBlogPage() {
     const blogPostsContainer = document.getElementById('blog-posts-container');
     if (blogPostsContainer) {
         const posts = await getBlogPosts();
-        blogPostsContainer.innerHTML = posts.map(post => `
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="${post.coverImageURL || 'https://via.placeholder.com/400x250'}" alt="${post.title}" class="w-full h-48 object-cover">
-                <div class="p-6">
-                    <h3 class="text-2xl font-semibold text-gray-900 mb-2">${post.title}</h3>
-                    <p class="text-gray-600 text-sm mb-3">By ${post.author} on ${new Date(post.date.seconds * 1000).toLocaleDateString()}</p>
-                    <p class="text-gray-700 line-clamp-3">${post.content.substring(0, 150)}...</p>
-                    <a href="post.html?slug=${post.slug}" class="mt-4 inline-block text-indigo-600 hover:text-indigo-800 font-medium">Read More &rarr;</a>
+        blogPostsContainer.innerHTML = posts.map(post => {
+            const postDate = post.date && post.date.seconds ? new Date(post.date.seconds * 1000).toLocaleDateString() : 'N/A';
+            return `
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <img src="${post.coverImageURL || 'https://via.placeholder.com/400x250'}" alt="${post.title}" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-semibold text-gray-900 mb-2">${post.title}</h3>
+                        <p class="text-gray-600 text-sm mb-3">By ${post.author} on ${postDate}</p>
+                        <p class="text-gray-700 line-clamp-3">${post.content.substring(0, 150)}...</p>
+                        <a href="post.html?slug=${post.slug}" class="mt-4 inline-block text-indigo-600 hover:text-indigo-800 font-medium">Read More &rarr;</a>
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 }
 
@@ -183,24 +214,26 @@ async function renderBlogPostPage() {
     const blogPostContainer = document.getElementById('blog-post-container');
 
     if (!postSlug || !blogPostContainer) {
-        blogPostContainer.innerHTML = '<p class="text-center text-red-500">Blog post not found.</p>';
+        blogPostContainer.innerHTML = '<p class="text-center text-red-500">Blog post slug missing or container not found.</p>';
         return;
     }
 
-    const post = await getBlogPost(postSlug);
+    const post = await getBlogPost(postSlug); // getBlogPost correctly fetches by slug
 
     if (post) {
-        await setPageMetaData(post.title, {
+        await setPageMetaData('blog-post', { // Use a generic page name for fetching, then override
             title: `${post.title} - Blog`,
             description: post.content.substring(0, 160),
             keywords: `${post.title}, blog, ${post.author}`
         });
 
+        const postDate = post.date && post.date.seconds ? new Date(post.date.seconds * 1000).toLocaleDateString() : 'N/A';
+
         blogPostContainer.innerHTML = `
             <div class="bg-white p-8 rounded-lg shadow-lg">
                 <img src="${post.coverImageURL || 'https://via.placeholder.com/800x400'}" alt="${post.title}" class="w-full h-72 object-cover rounded-lg mb-6">
                 <h1 class="text-4xl font-extrabold text-gray-900 mb-3">${post.title}</h1>
-                <p class="text-gray-600 text-sm mb-6">By ${post.author} on ${new Date(post.date.seconds * 1000).toLocaleDateString()}</p>
+                <p class="text-gray-600 text-sm mb-6">By ${post.author} on ${postDate}</p>
                 <div class="prose max-w-none text-gray-800 leading-relaxed" id="post-content">
                     ${post.content}
                 </div>
@@ -226,13 +259,7 @@ async function renderFaqPage() {
                 </div>
             </div>
         `).join('');
-
-        window.toggleFaq = (id) => {
-            const content = document.getElementById(id);
-            const icon = document.getElementById(`faq-icon-${id.split('-')[1]}`);
-            content.classList.toggle('hidden');
-            icon.classList.toggle('rotate-45');
-        };
+        // toggleFaq is now global, no need to define it here
     }
 }
 
@@ -246,7 +273,7 @@ async function renderTeamPage() {
                 <h3 class="text-xl font-semibold text-gray-900">${member.name}</h3>
                 <p class="text-indigo-600 mb-2">${member.role}</p>
                 <p class="text-gray-600 text-sm">${member.bio || 'No bio available.'}</p>
-                ${member.socialLinks ? `
+                ${member.socialLinks && (member.socialLinks.twitter || member.socialLinks.linkedin) ? `
                     <div class="mt-4 flex justify-center space-x-4">
                         ${member.socialLinks.twitter ? `<a href="${member.socialLinks.twitter}" target="_blank" class="text-blue-400 hover:text-blue-600">Twitter</a>` : ''}
                         ${member.socialLinks.linkedin ? `<a href="${member.socialLinks.linkedin}" target="_blank" class="text-blue-700 hover:text-blue-900">LinkedIn</a>` : ''}
@@ -275,7 +302,7 @@ function setupSubmitToolForm() {
 
             // Basic validation
             if (!toolData.name || !toolData.url || !toolData.description || !toolData.category) {
-                alert('Please fill in all required fields.');
+                showMessage('Please fill in all required fields.', 'error');
                 return;
             }
 
@@ -285,22 +312,12 @@ function setupSubmitToolForm() {
                 // For this example, if a direct URL is provided, we use it.
                 // If you want file uploads, it would need server-side or more complex client-side logic.
                 await addTool(toolData);
-                alert('Tool submitted successfully! It will be reviewed by an administrator.');
+                showMessage('Tool submitted successfully! It will be reviewed by an administrator.', 'success');
                 submitToolForm.reset();
             } catch (error) {
                 console.error("Error submitting tool:", error);
-                alert('There was an error submitting your tool. Please try again.');
+                showMessage('There was an error submitting your tool. Please try again.', 'error');
             }
         });
     }
-}
-
-// Global utility for general success/error messages
-function showMessage(message, type = 'success') {
-    const messageContainer = document.getElementById('message-container');
-    if (messageContainer) {
-        messageContainer.innerHTML = `<div class="p-3 mb-4 rounded-md ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${message}</div>`;
-        setTimeout(() => messageContainer.innerHTML = '', 5000);
-    }
-}
-window.showMessage = showMessage; // Make it globally accessible for HTML inline calls if needed
+                                                                                                     }
