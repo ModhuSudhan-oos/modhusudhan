@@ -1,6 +1,6 @@
 // firestore.js
 import { db, storage } from './firebase-config.js';
-import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, setDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js";
 
 // --- General CRUD Operations ---
@@ -94,10 +94,11 @@ async function deleteCategory(id) { return deleteDocument("categories", id); }
 
 // Admin Users
 async function getAdminUsers() { return getAllDocuments("adminUsers"); }
-async function getAdminUser(uid) { return getDocumentById("adminUsers", uid); } // Note: uid is used as doc ID
+async function getAdminUser(uid) { return getDocumentById("adminUsers", uid); }
 async function addAdminUser(uid, data) { // For adding new admin users with specific UID
     const docRef = doc(db, "adminUsers", uid);
-    await updateDoc(docRef, data, { merge: true }); // Use set with merge true to create if not exists
+    // Use set with merge: true to create the document if it doesn't exist, or merge if it does.
+    await setDoc(docRef, data, { merge: true });
 }
 async function updateAdminUser(uid, data) { return updateDocument("adminUsers", uid, data); }
 async function deleteAdminUser(uid) { return deleteDocument("adminUsers", uid); }
@@ -120,7 +121,7 @@ async function deleteTestimonial(id) { return deleteDocument("testimonials", id)
 async function getFaqs() { return getAllDocuments("faqs"); }
 async function getFaq(id) { return getDocumentById("faqs", id); }
 async function addFaq(data) { return addDocument("faqs", data); }
-async function updateFaq(id, data) { return updateDocument("faqs", id, data); }
+async function updateFaq(id, data) { return updateDocument("faqs", id, data); } // Corrected function name
 async function deleteFaq(id) { return deleteDocument("faqs", id); }
 
 // Blog Posts
@@ -129,13 +130,16 @@ async function getBlogPosts() {
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
-async function getBlogPost(slug) {
+async function getBlogPost(slug) { // Fetches by slug for public site
     const q = query(collection(db, "blogPosts"), where("slug", "==", slug));
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
         return { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
     }
     return null;
+}
+async function getBlogPostById(id) { // New function to fetch by ID for admin panel
+    return getDocumentById("blogPosts", id);
 }
 async function addBlogPost(data) { return addDocument("blogPosts", data); }
 async function updateBlogPost(id, data) { return updateDocument("blogPosts", id, data); }
@@ -221,8 +225,8 @@ export {
     getAdminUsers, getAdminUser, addAdminUser, updateAdminUser, deleteAdminUser,
     getTeamMembers, getTeamMember, addTeamMember, updateTeamMember, deleteTeamMember,
     getTestimonials, getTestimonial, addTestimonial, updateTestimonial, deleteTestimonial,
-    getFaqs, getFaq, addFaq, updateFaq, deleteFaq,
-    getBlogPosts, getBlogPost, addBlogPost, updateBlogPost, deleteBlogPost,
+    getFaqs, getFaq, addFaq, updateFaq, deleteFaq, // Corrected updateFaq export
+    getBlogPosts, getBlogPost, getBlogPostById, addBlogPost, updateBlogPost, deleteBlogPost, // Added getBlogPostById
     getSeoMeta, addOrUpdateSeoMeta, deleteSeoMeta,
     recordAffiliateClick, getAffiliateClicks,
     // Storage
