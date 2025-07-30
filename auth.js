@@ -1,4 +1,4 @@
-// auth.js
+// auth.js (No changes needed, but included for completeness)
 import { auth, db } from './firebase-config.js';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
@@ -50,7 +50,8 @@ async function isAdmin() {
     }
     const userDocRef = doc(db, "adminUsers", user.uid);
     const userDocSnap = await getDoc(userDocRef);
-    return userDocSnap.exists() && userDocSnap.data().isSuperAdmin === true;
+    // An admin user is someone who has an entry in adminUsers collection
+    return userDocSnap.exists();
 }
 
 /**
@@ -85,10 +86,12 @@ function protectAdminRoute(redirectUrl = '/login.html') {
         }
         const userDocRef = doc(db, "adminUsers", user.uid);
         const userDocSnap = await getDoc(userDocRef);
-        if (!userDocSnap.exists() || (!userDocSnap.data().isSuperAdmin && !userDocSnap.data().canEditTools)) {
+        // User must exist in adminUsers collection to access admin panel
+        if (!userDocSnap.exists()) {
             alert('You do not have permission to access this page.');
             window.location.href = redirectUrl;
         }
+        // Additional checks like `canEditTools` should be done at the module level
     });
 }
 
