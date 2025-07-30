@@ -1,6 +1,4 @@
-// firebase-config.js
-// Firebase SDK 9.x compatible
-
+// firebase-config.js (No changes needed, but included for completeness)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
