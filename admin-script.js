@@ -6,8 +6,8 @@ import {
     getCategories, addCategory, updateCategory, deleteCategory,
     getAdminUsers, updateAdminUser,
     getTestimonials, addTestimonial, updateTestimonial, deleteTestimonial,
-    getFaqs, addFaq, updateFfaq, deleteFaq,
-    getBlogPosts, addBlogPost, updateBlogPost, deleteBlogPost,
+    getFaqs, addFaq, updateFaq, deleteFaq, // Corrected updateFaq import
+    getBlogPosts, addBlogPost, updateBlogPost, deleteBlogPost, getBlogPostById, // Added getBlogPostById
     getSeoMeta, addOrUpdateSeoMeta,
     getAffiliateClicks,
     getTeamMembers, addTeamMember, updateTeamMember, deleteTeamMember
@@ -18,15 +18,15 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/fi
 // Universal Admin UI Elements & Setup
 document.addEventListener('DOMContentLoaded', async () => {
     // Protect all admin panel routes
-    protectAdminRoute();
+    protectAdminRoute(); // This sets up the listener, but the subsequent loading depends on it.
 
     const logoutButton = document.getElementById('logout-button');
     if (logoutButton) {
         logoutButton.addEventListener('click', logoutUser);
     }
 
-    // Dynamic admin menu based on user role
-    await onAuthStateChanged(auth, async (user) => {
+    // Dynamic admin menu based on user role and load content only after auth state is known
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
             const superAdmin = await isSuperAdmin();
             const adminMenu = document.getElementById('admin-menu');
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     `;
                 }
             }
-            loadAdminContent(); // Load content based on URL parameter
+            await loadAdminContent(); // Load content based on URL parameter after menu is set
         }
     });
 
@@ -77,6 +77,7 @@ async function loadAdminContent() {
 
     let htmlContent = '';
     let currentModule = '';
+    const superAdmin = await isSuperAdmin(); // Check super admin status once
 
     switch (view) {
         case 'tools':
@@ -98,8 +99,7 @@ async function loadAdminContent() {
             break;
         case 'categories':
             currentModule = 'Categories';
-            const canManageCategories = await isSuperAdmin(); // Only super admins can manage categories
-            if (!canManageCategories) {
+            if (!superAdmin) { // Only super admins can manage categories
                 htmlContent = `<p class="text-red-500">You do not have permission to manage categories.</p>`;
             } else {
                 htmlContent = await renderCategoriesModule();
@@ -107,8 +107,7 @@ async function loadAdminContent() {
             break;
         case 'faqs':
             currentModule = 'FAQs';
-            const canManageFaqs = await isSuperAdmin();
-            if (!canManageFaqs) {
+            if (!superAdmin) {
                 htmlContent = `<p class="text-red-500">You do not have permission to manage FAQs.</p>`;
             } else {
                 htmlContent = await renderFaqsModule();
@@ -120,8 +119,7 @@ async function loadAdminContent() {
             break;
         case 'blog':
             currentModule = 'Blog CMS';
-            const canManageBlog = await isSuperAdmin();
-            if (!canManageBlog) {
+            if (!superAdmin) {
                 htmlContent = `<p class="text-red-500">You do not have permission to manage the Blog.</p>`;
             } else {
                 htmlContent = await renderBlogModule();
@@ -129,12 +127,12 @@ async function loadAdminContent() {
             break;
         case 'add-blog-post':
             currentModule = 'Add Blog Post';
-            protectSuperAdminRoute();
+            if (!superAdmin) { htmlContent = `<p class="text-red-500">You do not have permission to add blog posts.</p>`; break; }
             htmlContent = renderAddBlogPostForm();
             break;
         case 'edit-blog-post':
             currentModule = 'Edit Blog Post';
-            protectSuperAdminRoute();
+            if (!superAdmin) { htmlContent = `<p class="text-red-500">You do not have permission to edit blog posts.</p>`; break; }
             const postId = urlParams.get('id');
             if (postId) {
                 htmlContent = await renderEditBlogPostForm(postId);
@@ -144,17 +142,17 @@ async function loadAdminContent() {
             break;
         case 'team':
             currentModule = 'Team Members';
-            protectSuperAdminRoute();
+            if (!superAdmin) { htmlContent = `<p class="text-red-500">You do not have permission to manage team members.</p>`; break; }
             htmlContent = await renderTeamModule();
             break;
         case 'seo':
             currentModule = 'SEO Meta Editor';
-            protectSuperAdminRoute();
+            if (!superAdmin) { htmlContent = `<p class="text-red-500">You do not have permission to manage SEO meta.</p>`; break; }
             htmlContent = await renderSeoModule();
             break;
         case 'analytics':
             currentModule = 'Analytics';
-            protectSuperAdminRoute();
+            if (!superAdmin) { htmlContent = `<p class="text-red-500">You do not have permission to view analytics.</p>`; break; }
             htmlContent = await renderAnalyticsModule();
             break;
         default:
@@ -230,7 +228,7 @@ async function renderDashboard() {
 // --- Tools Module ---
 async function renderToolsModule() {
     const tools = await getTools();
-    const canEdit = await isSuperAdmin(); // Editors can also edit tools. More granular check needed based on 'canEditTools'
+    const canEdit = await isSuperAdmin(); // Simplified for now; check 'canEditTools' from adminUser doc if needed
     const isSuper = await isSuperAdmin(); // Only super admin can delete
 
     return `
@@ -256,7 +254,7 @@ async function renderToolsModule() {
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap"><img src="${tool.logoURL || 'https://via.placeholder.com/40'}" alt="${tool.name}" class="w-10 h-10 object-contain rounded-full"></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${tool.name}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tool.category}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tool.category || 'N/A'}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${tool.featured ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
                                     ${tool.featured ? 'Yes' : 'No'}
@@ -348,7 +346,7 @@ async function renderEditToolForm(toolId) {
             </div>
             <div class="mb-4">
                 <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
-                <input type="text" id="category" name="category" value="${tool.category}" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <input type="text" id="category" name="category" value="${tool.category || ''}" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
             <div class="mb-4">
                 <label for="tags" class="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
@@ -567,17 +565,20 @@ async function renderBlogModule() {
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200" id="blog-posts-list">
-                    ${blogPosts.length > 0 ? blogPosts.map(post => `
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${post.title}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${post.author}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(post.date.seconds * 1000).toLocaleDateString()}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="admin.html?view=edit-blog-post&id=${post.id}" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
-                                <button class="text-red-600 hover:text-red-900 delete-blog-post-btn" data-id="${post.id}">Delete</button>
-                            </td>
-                        </tr>
-                    `).join('') : `<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No blog posts found.</td></tr>`}
+                    ${blogPosts.length > 0 ? blogPosts.map(post => {
+                        const postDate = post.date && post.date.seconds ? new Date(post.date.seconds * 1000).toLocaleDateString() : 'N/A';
+                        return `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${post.title}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${post.author}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${postDate}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="admin.html?view=edit-blog-post&id=${post.id}" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
+                                    <button class="text-red-600 hover:text-red-900 delete-blog-post-btn" data-id="${post.id}">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('') : `<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No blog posts found.</td></tr>`}
                 </tbody>
             </table>
         </div>
@@ -615,7 +616,7 @@ function renderAddBlogPostForm() {
 }
 
 async function renderEditBlogPostForm(postId) {
-    const post = await getBlogPost(postId); // Assuming getBlogPost can fetch by ID as well
+    const post = await getBlogPostById(postId); // Use the new function to fetch by ID
     if (!post) {
         return `<p class="text-red-500">Blog post not found.</p>`;
     }
@@ -653,7 +654,7 @@ async function renderEditBlogPostForm(postId) {
 async function renderTeamModule() {
     const teamMembers = await getTeamMembers();
     const adminUsers = await getAdminUsers(); // Get existing admin users for role assignment
-    const usersWithoutTeamProfile = adminUsers.filter(admin => !teamMembers.some(tm => tm.uid === admin.uid));
+    const usersWithoutTeamProfile = adminUsers.filter(admin => !teamMembers.some(tm => tm.uid === admin.id)); // Use admin.id as UID
 
     return `
         <div class="mb-6 flex justify-between items-center">
@@ -677,10 +678,10 @@ async function renderTeamModule() {
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap"><img src="${member.avatarURL || 'https://via.placeholder.com/32'}" alt="${member.name}" class="w-8 h-8 object-cover rounded-full"></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${member.name}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${member.email}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${member.email || 'N/A'}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${member.role}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button class="text-indigo-600 hover:text-indigo-900 mr-4 edit-team-member-btn" data-id="${member.id}" data-uid="${member.uid}" data-name="${member.name}" data-email="${member.email}" data-role="${member.role}" data-bio="${member.bio || ''}" data-avatarurl="${member.avatarURL || ''}" data-twitter="${(member.socialLinks && member.socialLinks.twitter) || ''}" data-linkedin="${(member.socialLinks && member.socialLinks.linkedin) || ''}">Edit</button>
+                                <button class="text-indigo-600 hover:text-indigo-900 mr-4 edit-team-member-btn" data-id="${member.id}" data-uid="${member.uid || ''}" data-name="${member.name}" data-email="${member.email || ''}" data-role="${member.role}" data-bio="${member.bio || ''}" data-avatarurl="${member.avatarURL || ''}" data-twitter="${(member.socialLinks && member.socialLinks.twitter) || ''}" data-linkedin="${(member.socialLinks && member.socialLinks.linkedin) || ''}">Edit</button>
                                 <button class="text-red-600 hover:text-red-900 delete-team-member-btn" data-id="${member.id}">Delete</button>
                             </td>
                         </tr>
@@ -697,11 +698,12 @@ async function renderTeamModule() {
                     <input type="hidden" id="team-member-uid">
 
                     <div class="mb-4">
-                        <label for="team-member-email-select" class="block text-sm font-medium text-gray-700">Select Existing Admin (or enter details below)</label>
+                        <label for="team-member-email-select" class="block text-sm font-medium text-gray-700">Select Existing Admin (Optional)</label>
                         <select id="team-member-email-select" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
                             <option value="">-- Select --</option>
-                            ${usersWithoutTeamProfile.map(user => `<option value="${user.uid}" data-email="${user.email}">${user.email}</option>`).join('')}
+                            ${usersWithoutTeamProfile.map(user => `<option value="${user.id}" data-email="${user.email || ''}">${user.email || 'No Email'}</option>`).join('')}
                         </select>
+                        <p class="text-sm text-gray-500 mt-1">Selecting an admin will pre-fill UID and Email.</p>
                     </div>
 
                     <div class="mb-4">
@@ -1060,7 +1062,7 @@ function attachAdminEventListeners(view) {
 
             try {
                 if (id) {
-                    await updateFfaq(id, faqData); // Note: Corrected typo from updateFaq to updateFfaq based on firestore.js export
+                    await updateFaq(id, faqData); // Corrected to updateFaq
                     showMessage('FAQ updated successfully!', 'success');
                 } else {
                     await addFaq(faqData);
@@ -1260,6 +1262,8 @@ function attachAdminEventListeners(view) {
             teamMemberEmailSelect.value = ''; // Reset select
             teamMemberModalTitle.textContent = 'Add Team Member';
             teamMemberModal.classList.remove('hidden');
+            teamMemberEmailInput.removeAttribute('readonly'); // Make email editable by default for new entries
+            teamMemberUidInput.value = ''; // Ensure UID is cleared for new entries
         });
 
         cancelTeamMemberBtn.addEventListener('click', () => {
@@ -1269,8 +1273,9 @@ function attachAdminEventListeners(view) {
         teamMemberEmailSelect.addEventListener('change', () => {
             const selectedOption = teamMemberEmailSelect.options[teamMemberEmailSelect.selectedIndex];
             if (selectedOption.value) {
-                teamMemberUidInput.value = selectedOption.value;
+                teamMemberUidInput.value = selectedOption.value; // UID is the option's value
                 teamMemberEmailInput.value = selectedOption.dataset.email;
+                teamMemberEmailInput.setAttribute('readonly', 'true'); // Prevent editing if selected from existing admin
                 teamMemberNameInput.value = ''; // Clear name, let user fill
                 teamMemberRoleInput.value = ''; // Clear role, let user fill
                 teamMemberBioInput.value = '';
@@ -1280,6 +1285,7 @@ function attachAdminEventListeners(view) {
             } else {
                 teamMemberUidInput.value = '';
                 teamMemberEmailInput.value = '';
+                teamMemberEmailInput.removeAttribute('readonly');
             }
         });
 
@@ -1297,6 +1303,12 @@ function attachAdminEventListeners(view) {
                 teamMemberEmailSelect.value = e.target.dataset.uid; // Pre-select if applicable
                 teamMemberModalTitle.textContent = 'Edit Team Member';
                 teamMemberModal.classList.remove('hidden');
+                // If a UID exists, make email readonly as it's tied to an existing admin user
+                if (teamMemberUidInput.value) {
+                    teamMemberEmailInput.setAttribute('readonly', 'true');
+                } else {
+                    teamMemberEmailInput.removeAttribute('readonly');
+                }
             });
         });
 
@@ -1319,7 +1331,7 @@ function attachAdminEventListeners(view) {
         teamMemberForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = teamMemberIdInput.value;
-            const uid = teamMemberUidInput.value; // UID from selected admin user
+            const uid = teamMemberUidInput.value || null; // UID from selected admin user, or null if new
             const name = teamMemberNameInput.value;
             const email = teamMemberEmailInput.value;
             const role = teamMemberRoleInput.value;
@@ -1332,7 +1344,8 @@ function attachAdminEventListeners(view) {
             if (twitter) socialLinks.twitter = twitter;
             if (linkedin) socialLinks.linkedin = linkedin;
 
-            const memberData = { uid, name, email, role, bio, avatarURL, socialLinks };
+            const memberData = { name, email, role, bio, avatarURL, socialLinks };
+            if (uid) memberData.uid = uid; // Only add UID if it exists
 
             try {
                 if (id) {
@@ -1354,7 +1367,7 @@ function attachAdminEventListeners(view) {
         if (seoHomeForm) {
             seoHomeForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const pageId = document.getElementById('home-page-id').value;
+                const pageId = document.getElementById('home-page-id').value; // This will be empty for new, or ID for existing
                 const title = document.getElementById('home-title').value;
                 const description = document.getElementById('home-description').value;
                 const keywords = document.getElementById('home-keywords').value;
@@ -1363,6 +1376,8 @@ function attachAdminEventListeners(view) {
                 try {
                     await addOrUpdateSeoMeta('home', seoData);
                     showMessage('Home page SEO updated successfully!', 'success');
+                    // Reload the content to ensure the ID is updated for subsequent edits
+                    await loadAdminContent();
                 } catch (error) {
                     console.error("Error updating home page SEO:", error);
                     showMessage('Error updating home page SEO.', 'error');
@@ -1374,7 +1389,7 @@ function attachAdminEventListeners(view) {
         if (seoBlogForm) {
             seoBlogForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const pageId = document.getElementById('blog-page-id').value;
+                const pageId = document.getElementById('blog-page-id').value; // This will be empty for new, or ID for existing
                 const title = document.getElementById('blog-title').value;
                 const description = document.getElementById('blog-description').value;
                 const keywords = document.getElementById('blog-keywords').value;
@@ -1383,6 +1398,8 @@ function attachAdminEventListeners(view) {
                 try {
                     await addOrUpdateSeoMeta('blog', seoData);
                     showMessage('Blog page SEO updated successfully!', 'success');
+                    // Reload the content to ensure the ID is updated for subsequent edits
+                    await loadAdminContent();
                 } catch (error) {
                     console.error("Error updating blog page SEO:", error);
                     showMessage('Error updating blog page SEO.', 'error');
